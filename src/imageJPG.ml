@@ -787,6 +787,11 @@ let comp_plane (ctx : ctx) (c : comp) : int array =
    expanded in turn. *)
 let upsample ~(rw : int) ~(rh : int) ~(src : int array) ~(sw : int) ~(sh : int) :
     int array =
+  (* At 1:1 the mapping is the identity, so hand the plane back rather than
+     making two full-size copies of it.  This is the common case: a 4:4:4
+     image upsamples nothing, and it dominated decoding otherwise. *)
+  if rw = 1 && rh = 1 then src
+  else begin
   let dw = sw * rw and dh = sh * rh in
   let get sx sy = src.(clamp 0 (sw - 1) sx + (clamp 0 (sh - 1) sy * sw)) in
   (* Horizontal expansion. *)
@@ -823,6 +828,7 @@ let upsample ~(rw : int) ~(rh : int) ~(src : int array) ~(sw : int) ~(sh : int) 
       Array.blit tmp ((y / rh) * dw) dst doff dw
   done ;
   dst
+  end
 
 (* [build_image] turns the decoded frame into an {!Image.image}. *)
 let build_image (ctx : ctx) (fr : frame) : image =

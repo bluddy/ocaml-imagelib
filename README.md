@@ -34,6 +34,10 @@ As imagelib only requires `decompress`, it is suitable (excluding operations
 requiring the `imagemagick` `convert` binary) for compilation to javascript
 using `js_of_ocaml`, or inclusion in MirageOS unikernels.
 
+The JPEG codec is pure OCaml and currently slower than `imagemagick` and
+libjpeg; see [JPEG-PERFORMANCE.md](JPEG-PERFORMANCE.md) for measurements, a
+breakdown of where the time goes, and what could be done about it.
+
 Dependencies
 ------------
 List of dependencies:

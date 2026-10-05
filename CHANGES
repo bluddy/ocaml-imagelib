@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Skip the two full-size copies chroma upsampling used to make when nothing
+  needs upsampling, which is every component of a 4:4:4 image. This was 38% of
+  decode time; see JPEG-PERFORMANCE.md for measurements and for what
+  dominates the rest.
 - Fix the GIF decoder. An image descriptor's local colour table was being
   read *after* the LZW minimum code size, so any frame that carried a local
   colour table was decoded from the wrong offset; this made every frame but

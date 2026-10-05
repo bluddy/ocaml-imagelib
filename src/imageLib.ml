@@ -41,6 +41,8 @@ let openfile ~extension ich : image =
   then ImagePNG.parsefile ich else
   if List.mem ext ImageGIF.extensions
   then ImageGIF.parsefile ich else
+  if List.mem ext ImageJPG.extensions
+  then ImageJPG.parsefile ich else
   if List.mem ext ImagePPM.extensions
   then ImagePPM.parsefile ich else
   if List.mem ext ImageBMP.extensions
@@ -60,6 +62,8 @@ let openfile_streaming ~extension ich state =
     then Some (ImagePNG.parsefile ich), 0, None else
     if List.mem ext ImageGIF.extensions
     then if_some (fun v -> `GIF v) (ImageGIF.read_streaming ich None) else
+    if List.mem ext ImageJPG.extensions
+    then Some (ImageJPG.parsefile ich), 0, None else
     if List.mem ext ImagePPM.extensions
     then Some (ImagePPM.parsefile ich), 0, None else
     if List.mem ext ImageBMP.extensions
@@ -72,6 +76,8 @@ let writefile ~extension (och:ImageUtil.chunk_writer) i =
   then ImagePNG.write och i else
   if List.mem extension ImageGIF.extensions
   then ImageGIF.write och i else
+  if List.mem extension ImageJPG.extensions
+  then ImageJPG.write och i else
   if List.mem extension ImagePPM.extensions
   then ImagePPM.write och i else
     raise (Not_yet_implemented extension)

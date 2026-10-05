@@ -91,7 +91,26 @@ module PNG :
 
 module JPG :
   sig
-    module ReadJPG : ReadImage
+    include ReadImage
+    include WriteImage
+
+    type subsampling = ImageJPG.subsampling
+      = Four_four_four | Four_two_two | Four_two_zero
+
+    val write_jpg : ?quality:int -> ?subsampling:subsampling ->
+      chunk_writer -> image -> unit
+    (** [write_jpg ?quality ?subsampling cw image] encodes [image] as a
+        baseline sequential 8-bit JPEG and writes it to [cw].  [quality] ranges
+        from 1 to 100 and scales the example quantisation tables the way
+        libjpeg does; it defaults to 75.  [subsampling] selects the chroma
+        resolution and defaults to [Four_four_four], i.e. no chroma
+        subsampling.  Any alpha channel is ignored, and images whose
+        [max_val] exceeds 255 are scaled down to the 8-bit range. *)
+
+    val bytes_of_jpg : ?quality:int -> ?subsampling:subsampling ->
+      image -> Bytes.t
+    (** [bytes_of_jpg ?quality ?subsampling image] is [write_jpg] into an
+        in-memory buffer. *)
   end
 
 module GIF :

@@ -1,3 +1,10 @@
+## Unreleased
+
+- Add a pure OCaml JPEG codec: baseline sequential and progressive DCT
+  decoding (8-bit samples, arbitrary chroma subsampling, restart intervals)
+  and baseline sequential encoding.  JPEG is now handled natively by
+  `ImageLib`, so the `imagemagick` fallback is no longer used for it.
+
 ## ocaml-imagelib_20210511
 
 - Fix inflate of PNG images

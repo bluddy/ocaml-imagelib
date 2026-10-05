@@ -21,13 +21,13 @@
  (modules tests)
  (libraries imagelib imagelib.unix alcotest))
 
-; The JPEG tests read fixtures encoded by libjpeg together with their reference
-; decodes, so the whole [jpg] directory has to be available next to the test.
-; The action is spelled out because dune's implicit [test] action cannot carry
-; [deps].
+; The JPEG and GIF tests read fixtures encoded by libjpeg and libgif, together
+; with their reference decodes, so both directories have to be available next to
+; the test.  The action is spelled out because dune's implicit [test] action
+; cannot carry [deps].
 (rule
  (alias runtest)
- (deps (source_tree jpg))
+ (deps (source_tree jpg) (source_tree gif))
  (action
   (run %{exe:tests.exe})))
 

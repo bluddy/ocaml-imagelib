@@ -30,8 +30,11 @@ Supported image formats:
       arbitrary chroma subsampling and restart intervals.  Writing produces
       baseline sequential images.  Arithmetic coding, lossless modes, 12-bit
       samples and CMYK are not supported.
- - GIF (only image size natively),
-    - There is an experimental native implementation available in the pure `ImageLib` module.
+ - GIF (read-only, animated),
+    - There is an experimental native implementation available in the pure `ImageLib` module, which now
+      handles interlaced images, local colour tables, the disposal methods 0 to 3 and comment extensions.
+      `imagelib.unix` still prefers `imagemagick` for GIF, to avoid changing the behaviour
+      existing applications depend on.
  - XCF (only image size natively),
  - Utility functions for handling unimplemented formats are available in
    the 'imagelib.unix' findlib package and handle conversion from unsupported

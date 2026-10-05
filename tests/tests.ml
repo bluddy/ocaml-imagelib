@@ -43,6 +43,10 @@ let fixture_path name = Filename.concat fixture_dir (name ^ ".jpg")
 let reference_path name =
   Filename.concat fixture_dir (name ^ ".ref.ppm")
 
+let gif_dir = "gif"
+
+let gif_path name = Filename.concat gif_dir name
+
 (* A minimal binary PPM reader, used to load the reference images. *)
 let is_ws c = c = ' ' || c = '\n' || c = '\t' || c = '\r'
 
@@ -275,6 +279,99 @@ module ImageLib_JPG_tests = struct
 end
 
 (* ------------------------------------------------------------------ *)
+(* GIF tests.                                                          *)
+(* ------------------------------------------------------------------ *)
+
+(* The GIF decoder is exercised against expectations recorded from libgif's
+   own decode of the fixtures, so every frame is pinned exactly.  The fixtures
+   cover the cases that used to be refused or mis-decoded. *)
+
+module ImageLib_GIF_tests = struct
+
+  (* [sum] is a weighted sum of every pixel of a frame and [pos] a positional
+     checksum, both over RGB; together they detect any pixel difference. *)
+  let frame_checksum (img : Image.image) : int64 * int64 =
+    let sum = ref 0L and pos = ref 0L in
+    for y = 0 to img.height - 1 do
+      for x = 0 to img.width - 1 do
+        Image.read_rgb img x y (fun r g b ->
+          sum := Int64.add !sum (Int64.of_int (r + (g * 256) + (b * 65536))) ;
+          pos := Int64.add !pos (Int64.of_int ((r * 3) + (g * 5) + (b * 7))))
+      done
+    done ;
+    (!sum, !pos)
+
+  (* Decode every frame of a GIF.  This also checks that the stream terminates
+     cleanly instead of raising. *)
+  let decode_frames name =
+    let ic = ImageUtil_unix.chunk_reader_of_path (gif_path name) in
+    let rec go state acc =
+      match ImageLib.openfile_streaming ~extension:".gif" ic state with
+      | None, _, _ -> List.rev acc
+      | Some img, _, next ->
+        let sum, pos = frame_checksum img in
+        go next
+          ((img.Image.width, img.Image.height, sum, pos) :: acc)
+    in
+    go None []
+
+  (* [expected] lists the (width, height, sum, pos) that libgif produced for
+     each frame of the fixture.  Comparing frame by frame rather than as one
+     list keeps the failure message pointing at the frame that differs.
+
+     Note that OCaml reads [a, b, c, d] as [(a, b), (c, d)], so these records
+     are pairs of pairs; that is consistent on both sides. *)
+  let check_gif name expected =
+    let got = decode_frames name in
+    Alcotest.(check int)
+      (name ^ ": number of frames") (List.length expected) (List.length got) ;
+    List.iter2
+      (fun (n, (ew, eh, esum, epos)) (gw, gh, gsum, gpos) ->
+         Alcotest.(check int)
+           (Printf.sprintf "%s frame %d: width" name n) ew gw ;
+         Alcotest.(check int)
+           (Printf.sprintf "%s frame %d: height" name n) eh gh ;
+         Alcotest.(check int64)
+           (Printf.sprintf "%s frame %d: pixel sum" name n) esum gsum ;
+         Alcotest.(check int64)
+           (Printf.sprintf "%s frame %d: positional sum" name n) epos gpos)
+      (List.mapi (fun i e -> (i + 1, e)) expected) got
+
+  let interlaced () = check_gif "interlaced.gif"
+      [ 23, 19, 2263331793L, 655045L ]
+
+  let local_table () = check_gif "local_table.gif"
+      [ 20, 16, 104877600L, 71200L
+      ; 20, 16, 105696800L, 87200L
+      ; 20, 16, 106516000L, 103200L
+      ]
+
+  let multi_frame () = check_gif "multi_frame.gif"
+      [ 24, 18, 0L, 0L
+      ; 24, 18, 3718012752L, 636336L
+      ; 24, 18, 188268192L, 498528L
+      ; 24, 18, 3906280944L, 1134864L
+      ; 24, 18, 348224832L, 444096L
+      ]
+
+  let comment () = check_gif "comment.gif"
+      [ 16, 12, 1133975040L, 264960L ]
+
+  let palette256 () = check_gif "palette256.gif"
+      [ 21, 15, 2640131185L, 602756L ]
+
+  let unit_tests : unit Alcotest.test_case list = [
+    "interlaced single frame", `Quick, interlaced ;
+    "animation with local colour tables", `Quick, local_table ;
+    "multi-frame animation", `Quick, multi_frame ;
+    "comment extension is skipped", `Quick, comment ;
+    "256 entry palette", `Quick, palette256 ;
+  ]
+
+  let regressions : unit Alcotest.test_case list = []
+end
+
+(* ------------------------------------------------------------------ *)
 
 module ImageLib_JPG_encoder_tests = struct
 
@@ -484,6 +581,8 @@ let tests : unit Alcotest.test list =
     ("PNG regressions", ImageLib_PNG_tests.regressions);
     "JPG unit tests", ImageLib_JPG_tests.unit_tests;
     ("JPG regressions", ImageLib_JPG_tests.regressions);
+    "GIF unit tests", ImageLib_GIF_tests.unit_tests;
+    ("GIF regressions", ImageLib_GIF_tests.regressions);
     "JPG encoder unit tests", ImageLib_JPG_encoder_tests.unit_tests;
     ("JPG encoder regressions", ImageLib_JPG_encoder_tests.regressions);
   ]

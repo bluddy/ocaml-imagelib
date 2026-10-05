@@ -1,5 +1,13 @@
 ## Unreleased
 
+- Fix the GIF decoder. An image descriptor's local colour table was being
+  read *after* the LZW minimum code size, so any frame that carried a local
+  colour table was decoded from the wrong offset; this made every frame but
+  the first of most animations fail. Interlaced images are now decoded
+  instead of being refused, disposal method 3 (restore to previous) is
+  implemented instead of being reported as an invalid bit pattern, comment
+  and plain text extensions are skipped rather than refused, and a stray
+  debug print has been removed from the disposal handling.
 - Add a pure OCaml JPEG codec: baseline sequential and progressive DCT
   decoding (8-bit samples, arbitrary chroma subsampling, restart intervals)
   and baseline sequential encoding.  JPEG is now handled natively by

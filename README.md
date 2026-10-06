@@ -20,7 +20,7 @@ Supported image formats:
       baseline sequential images.  Arithmetic coding, lossless modes, 12-bit
       samples and CMYK are not supported.
  - GIF (read-only, animated),
-    - There is an experimental native implementation available in the pure `ImageLib` module, which now
+    - There is an experimental native implementation available in the pure `ImageCodec` module, which now
       handles interlaced images, local colour tables, the disposal methods 0 to 3 and comment extensions.
       `image_codec.unix` still prefers `imagemagick` for GIF, to avoid changing the behaviour
       existing applications depend on.

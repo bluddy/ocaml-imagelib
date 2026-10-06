@@ -25,14 +25,14 @@ open ImageUtil
    For an easy to use file-based interface, see the [imagelib.unix] findlib
    package distributed with [imagelib].
    You find said interface in [src/imageLib_unix.mli] or in the
-   documentation for the module {!ImageLib_unix}.
+   documentation for the module {!ImageCodec_unix}.
 
-   [ImageLib_unix] will fall back to using [imagemagick's convert] utility
+   [ImageCodec_unix] will fall back to using [imagemagick's convert] utility
    to accomodate the manipulation of file formats that are not well supported
    by this library.
 
    The GIF implementation is still experimental;
-   the [ImageLib_unix] module reverts to [imagemagick] to avoid causing
+   the [ImageCodec_unix] module reverts to [imagemagick] to avoid causing
    problems stemming from the premature state of the GIF stack.
  *)
 

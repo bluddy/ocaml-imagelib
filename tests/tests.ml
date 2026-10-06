@@ -1,16 +1,16 @@
-module ImageLib_PNG_tests = struct
+module ImageCodec_PNG_tests = struct
   let cr_as = ImageUtil.chunk_reader_of_string
 
   let chunk_reader_of_string_raises _ =
     Alcotest.(check_raises) "when reading outside bounds, End_of_file is raised"
     End_of_file
-    (fun () -> ignore @@ ImageLib.PNG.size(cr_as "\149\218\249"))
+    (fun () -> ignore @@ ImageCodec.PNG.size(cr_as "\149\218\249"))
 
   let self_test_1 () =
     let img = Image.create_rgb 3 3 in
     Image.fill_rgb img 0 0 0;
-    let enc = ImageLib.PNG.bytes_of_png img in
-    let dec = ImageLib.PNG.parsefile
+    let enc = ImageCodec.PNG.bytes_of_png img in
+    let dec = ImageCodec.PNG.parsefile
         (ImageUtil.chunk_reader_of_string (Bytes.to_string enc)) in
     Alcotest.check Alcotest.int "equality" 0 (Image.compare_image img dec) ;
     Image.write_rgb img 0 0 1 0 0 ;
@@ -83,14 +83,14 @@ let read_ppm fn =
 
 let decode_fixture name =
   let ic = open_in_bin (fixture_path name) in
-  let img = ImageLib.JPG.parsefile
+  let img = ImageCodec.JPG.parsefile
       (ImageUtil_unix.chunk_reader_of_in_channel ic) in
   close_in ic ;
   img
 
 let size_of_fixture name =
   let ic = open_in_bin (fixture_path name) in
-  let sz = ImageLib.JPG.size (ImageUtil_unix.chunk_reader_of_in_channel ic) in
+  let sz = ImageCodec.JPG.size (ImageUtil_unix.chunk_reader_of_in_channel ic) in
   close_in ic ;
   sz
 
@@ -132,7 +132,7 @@ let check_against_libjpeg name =
 
 (* ------------------------------------------------------------------ *)
 
-module ImageLib_JPG_tests = struct
+module ImageCodec_JPG_tests = struct
 
   (* Each entry exercises a different decoder path. *)
   let decoders =
@@ -167,7 +167,7 @@ module ImageLib_JPG_tests = struct
   let extensions () =
     Alcotest.(check (list string)) "known extensions"
       [ ".jfi" ; ".jfif" ; ".jif" ; ".jpe" ; ".jpeg" ; ".jpg" ]
-      (List.sort String.compare ImageLib.JPG.extensions)
+      (List.sort String.compare ImageCodec.JPG.extensions)
 
   let solid_is_exact () =
     (* A flat image has only DC coefficients.  The quantiser shifts the colour
@@ -213,7 +213,7 @@ module ImageLib_JPG_tests = struct
     let outcome = ref `No_exception in
     (try
        ignore
-         (ImageLib.JPG.parsefile
+         (ImageCodec.JPG.parsefile
             (ImageUtil.chunk_reader_of_string "not a jpeg at all")) ;
        outcome := `Decoded
      with
@@ -243,7 +243,7 @@ module ImageLib_JPG_tests = struct
       let outcome =
         try
           ignore
-            (ImageLib.JPG.parsefile
+            (ImageCodec.JPG.parsefile
                (ImageUtil.chunk_reader_of_string (String.sub data 0 cut))) ;
           `Decoded
         with
@@ -286,7 +286,7 @@ end
    own decode of the fixtures, so every frame is pinned exactly.  The fixtures
    cover the cases that used to be refused or mis-decoded. *)
 
-module ImageLib_GIF_tests = struct
+module ImageCodec_GIF_tests = struct
 
   (* [sum] is a weighted sum of every pixel of a frame and [pos] a positional
      checksum, both over RGB; together they detect any pixel difference. *)
@@ -306,7 +306,7 @@ module ImageLib_GIF_tests = struct
   let decode_frames name =
     let ic = ImageUtil_unix.chunk_reader_of_path (gif_path name) in
     let rec go state acc =
-      match ImageLib.openfile_streaming ~extension:".gif" ic state with
+      match ImageCodec.openfile_streaming ~extension:".gif" ic state with
       | None, _, _ -> List.rev acc
       | Some img, _, next ->
         let sum, pos = frame_checksum img in
@@ -373,7 +373,7 @@ end
 
 (* ------------------------------------------------------------------ *)
 
-module ImageLib_JPG_encoder_tests = struct
+module ImageCodec_JPG_encoder_tests = struct
 
   (* A gradient with enough structure to produce nonzero AC coefficients. *)
   let make_gradient w h =
@@ -389,8 +389,8 @@ module ImageLib_JPG_encoder_tests = struct
     img
 
   let roundtrip ?quality ?subsampling img =
-    let encoded = ImageLib.JPG.bytes_of_jpg ?quality ?subsampling img in
-    ImageLib.JPG.parsefile
+    let encoded = ImageCodec.JPG.bytes_of_jpg ?quality ?subsampling img in
+    ImageCodec.JPG.parsefile
       (ImageUtil.chunk_reader_of_string (Bytes.to_string encoded))
 
   let roundtrip_error ?quality ?subsampling img =
@@ -431,7 +431,7 @@ let every_quality () =
     (fun (q, max_mean, max_max) ->
        check_roundtrip
          (Printf.sprintf "quality %d" q)
-         ~quality:q ~subsampling:ImageLib.JPG.Four_four_four
+         ~quality:q ~subsampling:ImageCodec.JPG.Four_four_four
          ~max_mean ~max_max img)
     [ 100, 4.0, 40 ; 90, 4.0, 40 ; 75, 5.0, 40 ; 50, 8.0, 40 ;
       25, 14.0, 60 ; 10, 18.0, 80 ]
@@ -451,9 +451,9 @@ let every_quality () =
       (fun (label, sub) ->
          check_roundtrip label ~quality:80 ~subsampling:sub
            ~max_mean:8.0 ~max_max:60 img)
-      [ ("4:4:4", ImageLib.JPG.Four_four_four) ;
-        ("4:2:2", ImageLib.JPG.Four_two_two) ;
-        ("4:2:0", ImageLib.JPG.Four_two_zero) ]
+      [ ("4:4:4", ImageCodec.JPG.Four_four_four) ;
+        ("4:2:2", ImageCodec.JPG.Four_two_two) ;
+        ("4:2:0", ImageCodec.JPG.Four_two_zero) ]
 
   let odd_dimensions () =
     (* Dimensions that are not multiples of the block size, so the encoder must
@@ -517,7 +517,7 @@ let every_quality () =
     (* Spot-check the header: libjpeg requires SOI first, a frame header with
        the right size, and EOI last. *)
     let img = make_gradient 16 16 in
-    let enc = Bytes.to_string (ImageLib.JPG.bytes_of_jpg ~quality:75 img) in
+    let enc = Bytes.to_string (ImageCodec.JPG.bytes_of_jpg ~quality:75 img) in
     let n = String.length enc in
     Alcotest.(check string) "starts with SOI" "\255\216"
       (String.sub enc 0 2) ;
@@ -549,11 +549,11 @@ let every_quality () =
     Alcotest.(check bool) "a frame header was found" true !found
 
   let writefile_dispatch () =
-    (* [ImageLib.writefile] must route .jpg to the JPEG encoder. *)
+    (* [ImageCodec.writefile] must route .jpg to the JPEG encoder. *)
     let img = make_gradient 16 16 in
     let buf = Buffer.create 4096 in
     let och = ImageUtil.chunk_writer_of_buffer buf in
-    ImageLib.writefile ~extension:".jpg" och img ;
+    ImageCodec.writefile ~extension:".jpg" och img ;
     ImageUtil.close_chunk_writer och ;
     let data = Buffer.contents buf in
     Alcotest.(check bool) "produces a JPEG" true
@@ -579,13 +579,13 @@ end
 (* Extension dispatch.                                                 *)
 (* ------------------------------------------------------------------ *)
 
-(* [ImageLib] selects a format by matching the [~extension:] argument against
+(* [ImageCodec] selects a format by matching the [~extension:] argument against
    each format's [extensions], which are all written with a leading dot.
    [Filename.extension] yields that dotted form, but the public [~extension:]
    parameters do not require it, so a caller may equally pass the bare name.
    Every spelling -- with or without the dot, in any case -- must dispatch to
    the same format instead of raising [Not_yet_implemented]. *)
-module ImageLib_dispatch_tests = struct
+module ImageCodec_dispatch_tests = struct
 
   (* Run [f ext] for each spelling, failing the test if [f] reports the format
      as not implemented. *)
@@ -600,35 +600,35 @@ module ImageLib_dispatch_tests = struct
       exts
 
   let check_png (img : Image.image) (png : string) (ext : string) =
-    let w, h = ImageLib.size ~extension:ext (ImageUtil.chunk_reader_of_string png) in
+    let w, h = ImageCodec.size ~extension:ext (ImageUtil.chunk_reader_of_string png) in
     Alcotest.(check int) (ext ^ ": width") img.width w;
     Alcotest.(check int) (ext ^ ": height") img.height h;
-    let dec = ImageLib.openfile ~extension:ext (ImageUtil.chunk_reader_of_string png) in
+    let dec = ImageCodec.openfile ~extension:ext (ImageUtil.chunk_reader_of_string png) in
     Alcotest.(check int) (ext ^ ": openfile") 0 (Image.compare_image img dec);
-    (match ImageLib.openfile_streaming ~extension:ext (ImageUtil.chunk_reader_of_string png) None with
+    (match ImageCodec.openfile_streaming ~extension:ext (ImageUtil.chunk_reader_of_string png) None with
      | Some dec, _, _ ->
          Alcotest.(check int) (ext ^ ": streaming") 0 (Image.compare_image img dec)
      | None, _, _ -> Alcotest.fail (ext ^ ": streaming returned no image"));
     let buf = Buffer.create 0 in
     let och = ImageUtil.chunk_writer_of_buffer buf in
-    ImageLib.writefile ~extension:ext och img;
+    ImageCodec.writefile ~extension:ext och img;
     ImageUtil.close_chunk_writer och;
     let data = Buffer.contents buf in
     Alcotest.(check bool) (ext ^ ": writefile PNG magic") true
       (String.length data >= 4 && String.sub data 0 4 = "\137PNG")
 
   let check_jpg (img : Image.image) (ext : string) =
-    let enc = Bytes.to_string (ImageLib.JPG.bytes_of_jpg img) in
-    let w, h = ImageLib.size ~extension:ext (ImageUtil.chunk_reader_of_string enc) in
+    let enc = Bytes.to_string (ImageCodec.JPG.bytes_of_jpg img) in
+    let w, h = ImageCodec.size ~extension:ext (ImageUtil.chunk_reader_of_string enc) in
     Alcotest.(check int) (ext ^ ": width") img.width w;
     Alcotest.(check int) (ext ^ ": height") img.height h;
     (* JPEG is lossy, so only the dimensions must survive the round trip. *)
-    let dec = ImageLib.openfile ~extension:ext (ImageUtil.chunk_reader_of_string enc) in
+    let dec = ImageCodec.openfile ~extension:ext (ImageUtil.chunk_reader_of_string enc) in
     Alcotest.(check int) (ext ^ ": openfile dimensions") 0
       (max (abs (dec.width - img.width)) (abs (dec.height - img.height)));
     let buf = Buffer.create 0 in
     let och = ImageUtil.chunk_writer_of_buffer buf in
-    ImageLib.writefile ~extension:ext och img;
+    ImageCodec.writefile ~extension:ext och img;
     ImageUtil.close_chunk_writer och;
     let data = Buffer.contents buf in
     Alcotest.(check bool) (ext ^ ": writefile JPEG SOI") true
@@ -637,7 +637,7 @@ module ImageLib_dispatch_tests = struct
   let png_and_jpg_dispatch () =
     let img = Image.create_rgb 3 3 in
     Image.fill_rgb img 10 20 30;
-    let png = Bytes.to_string (ImageLib.PNG.bytes_of_png img) in
+    let png = Bytes.to_string (ImageCodec.PNG.bytes_of_png img) in
     for_each_spelling "png" [ ".png"; "png"; ".PNG"; "PnG" ] (check_png img png);
     for_each_spelling "jpg" [ ".jpg"; "jpg"; ".JPG" ] (check_jpg img)
 
@@ -650,16 +650,16 @@ end
 
 let tests : unit Alcotest.test list =
   [
-    "PNG unit tests", ImageLib_PNG_tests.unit_tests;
-    ("PNG regressions", ImageLib_PNG_tests.regressions);
-    "JPG unit tests", ImageLib_JPG_tests.unit_tests;
-    ("JPG regressions", ImageLib_JPG_tests.regressions);
-    "GIF unit tests", ImageLib_GIF_tests.unit_tests;
-    ("GIF regressions", ImageLib_GIF_tests.regressions);
-    "JPG encoder unit tests", ImageLib_JPG_encoder_tests.unit_tests;
-    ("JPG encoder regressions", ImageLib_JPG_encoder_tests.regressions);
-    "extension dispatch", ImageLib_dispatch_tests.unit_tests;
-    ("extension dispatch regressions", ImageLib_dispatch_tests.regressions);
+    "PNG unit tests", ImageCodec_PNG_tests.unit_tests;
+    ("PNG regressions", ImageCodec_PNG_tests.regressions);
+    "JPG unit tests", ImageCodec_JPG_tests.unit_tests;
+    ("JPG regressions", ImageCodec_JPG_tests.regressions);
+    "GIF unit tests", ImageCodec_GIF_tests.unit_tests;
+    ("GIF regressions", ImageCodec_GIF_tests.regressions);
+    "JPG encoder unit tests", ImageCodec_JPG_encoder_tests.unit_tests;
+    ("JPG encoder regressions", ImageCodec_JPG_encoder_tests.regressions);
+    "extension dispatch", ImageCodec_dispatch_tests.unit_tests;
+    ("extension dispatch regressions", ImageCodec_dispatch_tests.regressions);
   ]
 
 let () =

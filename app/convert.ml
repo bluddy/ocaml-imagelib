@@ -13,8 +13,8 @@ let _ =
   try
     let ic = ImageUtil_unix.chunk_reader_of_path input_path in
     let extension = Filename.extension input_path in
-    let img = ImageLib.openfile ~extension ic in
-    ImageLib_unix.writefile output_path img
+    let img = ImageCodec.openfile ~extension ic in
+    ImageCodec_unix.writefile output_path img
   with
   | Image.Not_yet_implemented(msg) -> panic "Not implemented: %s." msg
   | Image.Corrupted_image(msg)     -> panic "Corrupted image: %s." msg

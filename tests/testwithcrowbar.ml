@@ -1,4 +1,4 @@
-module ImageLib_tests = struct
+module ImageCodec_tests = struct
 
   (* let crowbar_gen_reader
   : ImageUtil.chunk_reader Crowbar.gen =
@@ -37,19 +37,19 @@ module ImageLib_tests = struct
 
   (*
   let crowbar_png_size () =
-    Crowbar.add_test ~name:"ImageLib.GIF.ReadGIF.openfile"
+    Crowbar.add_test ~name:"ImageCodec.GIF.ReadGIF.openfile"
       [crowbar_gen_cr_gif]
-      (crowbar_skip_known_errors(fun cr -> (ignore @@ ImageLib.GIF.parsefile cr; true)))
+      (crowbar_skip_known_errors(fun cr -> (ignore @@ ImageCodec.GIF.parsefile cr; true)))
       ;
-    Crowbar.add_test ~name:"ImageLib.PNG.size"
+    Crowbar.add_test ~name:"ImageCodec.PNG.size"
       [crowbar_gen_cr_png]
-      (crowbar_skip_known_errors(fun cr -> (ImageLib.PNG.size cr <> (0, 0))))
+      (crowbar_skip_known_errors(fun cr -> (ImageCodec.PNG.size cr <> (0, 0))))
   *)
 
   let crowbar_png_parsefile () =
-    Crowbar.add_test ~name:"ImageLib.PNG.openfile"
+    Crowbar.add_test ~name:"ImageCodec.PNG.openfile"
       [crowbar_gen_cr_png]
-      (crowbar_skip_known_errors(fun cr -> (ignore @@ ImageLib.PNG.parsefile cr; true)))
+      (crowbar_skip_known_errors(fun cr -> (ignore @@ ImageCodec.PNG.parsefile cr; true)))
 
   let fuzzing : unit Alcotest.test_case list =
     [
@@ -63,7 +63,7 @@ end
 
 let tests : unit Alcotest.test list =
   [
-    ("fuzzing", ImageLib_tests.fuzzing) ;
+    ("fuzzing", ImageCodec_tests.fuzzing) ;
   ]
 
 let () =

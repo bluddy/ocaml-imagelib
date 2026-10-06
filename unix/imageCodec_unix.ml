@@ -25,7 +25,7 @@ let rm fn =
 let size fn =
   let extension = Filename.extension fn in
   let ich = chunk_reader_of_path fn in
-  try ImageLib.size ~extension ich with
+  try ImageCodec.size ~extension ich with
   | Image.Not_yet_implemented _ ->
     begin
       warning fn "No support for image size...";
@@ -55,7 +55,7 @@ let openfile fn : image =
     (* GIF support is still limited, to avoid breaking existing applications
        we do not use it from the _unix module. *)
   else
-  try ImageLib.openfile ~extension ich with
+  try ImageCodec.openfile ~extension ich with
   | Image.Not_yet_implemented _ -> fallback ()
 
 let writefile fn i =
@@ -77,5 +77,5 @@ let writefile fn i =
     (* GIF support is still limited, to avoid breaking existing applications
        we do not use it from the _unix module. *)
   else
-    try ImageLib.writefile ~extension och i with
+    try ImageCodec.writefile ~extension och i with
     | Not_yet_implemented _ -> fallback ()

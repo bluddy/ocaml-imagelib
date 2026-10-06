@@ -40,8 +40,8 @@ other's start-up cost, and with the *installed* `imagelib-convert` rather than
   overheads. That isolates the codec from the tool.
 * **ImageMagick** is measured as `magick in.jpg ppm:-`, i.e. the real tool,
   including its start-up.
-* **imagelib** is measured in-process through `ImageLib.JPG.parsefile` and
-  `ImageLib.JPG.bytes_of_jpg`, and separately end to end through the installed
+* **imagelib** is measured in-process through `ImageCodec.JPG.parsefile` and
+  `ImageCodec.JPG.bytes_of_jpg`, and separately end to end through the installed
   `imagelib-convert`.
 
 Machine and toolchain:
@@ -150,7 +150,7 @@ dominated by the same per-pixel costs. On a 1280x960 image:
 |---|---:|
 | filling an image through `Image.write_rgb`, 1.2M pixels | 87 ms |
 | `ImagePPM.write_ppm` to a buffer, 3.7 MB | 314 ms |
-| `ImageLib.PNG.write` to a buffer | 281 ms |
+| `ImageCodec.PNG.write` to a buffer | 281 ms |
 
 `write_ppm` emits one `chunk_write_char` per byte, which is why it is the
 slowest of the three; that is a pre-existing issue in the PPM writer and has

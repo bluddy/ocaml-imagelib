@@ -133,7 +133,7 @@ let arg_parser array : config =
 let () =
   let config = arg_parser Sys.argv in
   (* [Filename.extension] returns the extension with its leading dot, which is
-     the form the [ImageLib] format lists use. *)
+     the form the [ImageCodec] format lists use. *)
   let extension filename =
     let ri =
       try String.rindex filename '.'
@@ -153,7 +153,7 @@ let () =
     done
   in
   let read_next =
-    ImageLib.openfile_streaming ~extension:(extension config.input_file)
+    ImageCodec.openfile_streaming ~extension:(extension config.input_file)
       (ImageUtil_unix.chunk_reader_of_path config.input_file) in
   let handle_resize input_img =
     let doit x y =
@@ -218,7 +218,7 @@ let () =
       end else begin
         let extension = extension fn in
         let wr = ImageUtil_unix.chunk_writer_of_path fn in
-        ImageLib.writefile ~extension wr img
+        ImageCodec.writefile ~extension wr img
       end
     in
     let rec loop frame_number = function

@@ -52,6 +52,63 @@ dune build
 dune install
 ```
 
+Quick Start: Reading and Writing Images
+---------------------------------------
+
+The `ImageCodec_unix` module provides a simple file-based interface for reading and writing images. Add `image_codec.unix` to your dune dependencies:
+
+```ocaml
+(libraries image_codec.unix)
+```
+
+### Reading an image
+
+```ocaml
+open Image
+open ImageCodec_unix
+
+let img = ImageCodec_unix.openfile "input.png"
+(* img : Image.image *)
+```
+
+The format is detected from the file extension. Supported formats: PNG, JPEG, GIF, BMP, PPM/PGM/PBM.
+
+### Writing an image
+
+```ocaml
+open Image
+open ImageCodec_unix
+
+let img = Image.create_rgb 256 256 in
+(* ... fill img ... *)
+ImageCodec_unix.writefile "output.jpg" img
+```
+
+### Getting image dimensions without decoding
+
+```ocaml
+let width, height = ImageCodec_unix.size "photo.jpg"
+```
+
+### Converting between formats
+
+```ocaml
+(* Convert PNG to JPEG *)
+let img = ImageCodec_unix.openfile "photo.png" in
+ImageCodec_unix.writefile "photo.jpg" img
+```
+
+### Handling unsupported formats
+
+For formats not natively supported (e.g., TIFF, WebP), `ImageCodec_unix` automatically falls back to ImageMagick's `convert` utility if available:
+
+```ocaml
+(* This will use ImageMagick to convert TIFF to PNG internally, then read it *)
+let img = ImageCodec_unix.openfile "document.tiff"
+```
+
+> **Note**: The native implementations are pure OCaml and have no external dependencies. The ImageMagick fallback is only used for unsupported formats.
+
 Imagetool
 ---------
 

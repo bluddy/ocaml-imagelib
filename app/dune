@@ -2,10 +2,10 @@
  (name imagetool)
  (public_name imagetool)
  (modules imagetool)
- (libraries imagelib imagelib.unix))
+ (libraries image-codec image-codec.unix))
 
 (executable
  (name convert)
- (public_name imagelib-convert)
+ (public_name image-codec-convert)
  (modules convert)
- (libraries imagelib imagelib.unix))
+ (libraries image-codec image-codec.unix))

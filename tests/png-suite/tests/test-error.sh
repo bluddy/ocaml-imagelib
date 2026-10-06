@@ -2,5 +2,5 @@
 
 for IMG in "$@"; do
   echo "Testing ${IMG}"
-  imagelib-convert "${IMG}" "${IMG}.ppm" && echo "SHOULD HAVE FAILED"
+  image-codec-convert "${IMG}" "${IMG}.ppm" && echo "SHOULD HAVE FAILED"
 done

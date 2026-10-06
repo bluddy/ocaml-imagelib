@@ -1,13 +1,13 @@
-The imagelib library
-====================
+The image-codec library
+=====================
 
-The imagelib library implements image formats such as PNG, BMP, and PPM in
+The image-codec library implements image formats such as PNG, BMP, and PPM in
 OCaml, relying on only one external dependency: 'decompress'.
 
 Unix-dependent functionality such as reading or writing to files in the
-filesystem are packaged in the `imagelib.unix` findlib module inside this
-OPAM package; to use it you need to include `imagelib.unix` specifically
-in your project's dependencies, for instance `(libraries imagelib.unix)`
+filesystem are packaged in the `image_codec.unix` findlib module inside this
+OPAM package; to use it you need to include `image_codec.unix` specifically
+in your project's dependencies, for instance `(libraries image_codec.unix)`
 in your Dune file.
 
 Supported image formats:
@@ -22,15 +22,15 @@ Supported image formats:
  - GIF (read-only, animated),
     - There is an experimental native implementation available in the pure `ImageLib` module, which now
       handles interlaced images, local colour tables, the disposal methods 0 to 3 and comment extensions.
-      `imagelib.unix` still prefers `imagemagick` for GIF, to avoid changing the behaviour
+      `image_codec.unix` still prefers `imagemagick` for GIF, to avoid changing the behaviour
       existing applications depend on.
  - XCF (only image size natively),
  - Utility functions for handling unimplemented formats are available in
-   the 'imagelib.unix' findlib package and handle conversion from unsupported
+   the 'image_codec.unix' findlib package and handle conversion from unsupported
    image formats like GIF, XCF by converting them to PNG using the
    `convert` commandline utility from `imagemagick`.
 
-As imagelib only requires `decompress`, it is suitable (excluding operations
+As image-codec only requires `decompress`, it is suitable (excluding operations
 requiring the `imagemagick` `convert` binary) for compilation to javascript
 using `js_of_ocaml`, or inclusion in MirageOS unikernels.
 
@@ -41,10 +41,9 @@ breakdown of where the time goes, and what could be done about it.
 Dependencies
 ------------
 List of dependencies:
- - OCaml (at least 4.03.0)
- - dune (at least 1.2.0)
- - decompress (version 0.8.1)
- - GNU Make (build)
+ - OCaml (at least 5.0.0)
+ - dune (at least 3.14)
+ - decompress (version >= 1.5.3)
 
 Additional packages:
  - ImageMagick (`convert`) for handling some formats.
@@ -53,12 +52,12 @@ Additional packages:
 Installation
 ------------
 
-Imagelib is available on `opam` (run `opam install imagelib`). It can also
+image-codec is available on `opam` (run `opam install image-codec`). It can also
 be installed from source as follows.
 
 ```bash
-make
-make install
+dune build
+dune install
 ```
 
 Imagetool
@@ -67,7 +66,7 @@ Imagetool
 `app/imagetool.ml` contains an example binary that acts as a command-line interface to many of the functions in the library. It will be installed as `imagetool` or `imagetool.exe` if you use **opam** to install the library, and otherwise it will be in `_build/default/app/imagetool.exe`
 
 ```
-usage: /home/user/ocaml/imagelib/_build/default/app/imagetool.exe [args] INPUT-FILE [OUTPUT-FILE]
+usage: imagetool [args] INPUT-FILE [OUTPUT-FILE]
 Displays a picture in the terminal, or convert it (if OUTPUT-FILE is specified)
 The OUTPUT-FILE is a template; any '#' will be replaced with
 the frame number (useful if the image has multiple frames)
@@ -104,15 +103,15 @@ Fuzzing
 
 This section is primarily of use for developers of the library.
 
-To exectute `crowbar` tests, it is enough to run `make slowtest`.
+To execute `crowbar` tests, it is enough to run `dune build @runtest`.
 
 The `aflrunner.exe` target can be used to fuzz test the image parsers with [AFL](http://lcamtuf.coredump.cx/afl).
 The parser is selected using the filename extension.
 
 Here is an example, requiring at least one valid BMP file in a folder called `sample-bmps/`:
 ```shell
-imagelib $ dune build tests/aflrunner.exe
-imagelib $ afl-fuzz \
+dune build tests/aflrunner.exe
+afl-fuzz \
   -i sample-bmps/ \
   -o bmp-results/ \
   -f /dev/shm/my.bmp -- ./_build/default/tests/aflrunner.exe x /dev/shm/my.bmp
@@ -120,13 +119,14 @@ imagelib $ afl-fuzz \
 
 Once one or more crashes have been identified, you can inspect them like this:
 ```shell
-imagelib/bmpfuzz/crashes $ export OCAMLRUNPARAM=b
-imagelib/bmpfuzz/crashes $ for x in id\:*
-    do echo ":: $x"
-    cp "$x" x.bmp
-    ../../_build/default/tests/aflrunner.exe x x.bmp
-    echo "// $x"
-  done
+export OCAMLRUNPARAM=b
+for x in id\:*
+do echo ":: $x"
+cp "$x" x.bmp
+../../_build/default/tests/aflrunner.exe x x.bmp
+echo "// $x"
+done
+```
 
 :: id:000015,sig:06,src:000110,op:havoc,rep:8
 Fatal error: exception Invalid_argument("Bytes.create")

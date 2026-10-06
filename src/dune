@@ -1,6 +1,6 @@
 (library
- (name imagelib)
- (public_name imagelib)
- (synopsis "Image library")
+ (name image_codec)
+ (public_name image-codec)
+ (synopsis "Pure OCaml image codec library")
  (wrapped false)
  (libraries stdlib-shims bigarray checkseum.ocaml decompress.zl))

@@ -1,12 +1,12 @@
-(** This module provides an easy-to-use interface for imagelib.
+(** This module provides an easy-to-use interface for image-codec.
     In most cases, you'd want to use these functions rather than those in
-    imagelib.
+    image-codec.
 *)
 
 (** [writefile fn img] writes the image [img] to the file [fn]. This function
     guesses the desired format using the extension.
     Raises {!Corrupted_image} if it encounters a problem.
-    If the file extension is unknown to imagelib,
+    If the file extension is unknown to image-codec,
     this will first write out a png
     and then convert that to the desired format using the "convert"
     command from imagemagick.
@@ -24,7 +24,7 @@ val size : string -> int * int
 (** [openfile fn] reads the image from the file [fn].
     This function guesses the file format using the extension.
     Raises {!Corrupted_image} if it encounters a problem.
-    If the file extension is unknown to imagelib, this will attempt to convert
+    If the file extension is unknown to image-codec, this will attempt to convert
     to png using imagemagick and then read in the png file.
 *)
 val openfile : string -> Image.image

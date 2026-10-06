@@ -45,23 +45,32 @@ open ImageUtil
    to convert to PNG if the file extension is unknown.
 *)
 val size : extension:string -> ImageUtil.chunk_reader -> int * int
+(** [size ~extension:ext ich] uses [ext] to select the image format.
+    The leading dot is optional: [".png"] and ["png"] (in any case) are
+    equivalent. *)
 
 (* [openfile fn] reads the image in the file [fn]. This function guesses the
    image format using the extension, and raises [{!Corrupted_image} msg] in
    case of problem.
 *)
 val openfile : extension:string -> ImageUtil.chunk_reader -> Image.image
+(** [openfile ~extension:ext ich] uses [ext] to select the image format.
+    The leading dot is optional: [".png"] and ["png"] (in any case) are
+    equivalent. *)
 
 val openfile_streaming : extension:string -> ImageUtil.chunk_reader ->
   [`GIF of ImageGIF.read_state] option ->
   image option * int * [`GIF of ImageGIF.read_state] option
 (** see {!ReadImageStreaming.read_streaming} *)
 
-(* [writefile extension och img] writes the image [img] to the chunk reader [och]. 
+(* [writefile extension och img] writes the image [img] to the chunk reader [och].
    The desired format is specified via [extension].
 *)
 val writefile : extension:string ->
   ImageUtil.chunk_writer -> Image.image -> unit
+(** [writefile ~extension:ext och img] uses [ext] to select the image format.
+    The leading dot is optional: [".png"] and ["png"] (in any case) are
+    equivalent. *)
 
 module PPM :
   sig

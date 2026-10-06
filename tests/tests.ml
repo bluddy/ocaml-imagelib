@@ -575,6 +575,79 @@ let every_quality () =
   let regressions : unit Alcotest.test_case list = []
 end
 
+(* ------------------------------------------------------------------ *)
+(* Extension dispatch.                                                 *)
+(* ------------------------------------------------------------------ *)
+
+(* [ImageLib] selects a format by matching the [~extension:] argument against
+   each format's [extensions], which are all written with a leading dot.
+   [Filename.extension] yields that dotted form, but the public [~extension:]
+   parameters do not require it, so a caller may equally pass the bare name.
+   Every spelling -- with or without the dot, in any case -- must dispatch to
+   the same format instead of raising [Not_yet_implemented]. *)
+module ImageLib_dispatch_tests = struct
+
+  (* Run [f ext] for each spelling, failing the test if [f] reports the format
+     as not implemented. *)
+  let for_each_spelling name exts f =
+    List.iter
+      (fun ext ->
+         (try f ext
+          with Image.Not_yet_implemented e ->
+             Alcotest.fail
+               (Printf.sprintf "%s: extension %S reported Not_yet_implemented (%S)"
+                  name ext e)))
+      exts
+
+  let check_png (img : Image.image) (png : string) (ext : string) =
+    let w, h = ImageLib.size ~extension:ext (ImageUtil.chunk_reader_of_string png) in
+    Alcotest.(check int) (ext ^ ": width") img.width w;
+    Alcotest.(check int) (ext ^ ": height") img.height h;
+    let dec = ImageLib.openfile ~extension:ext (ImageUtil.chunk_reader_of_string png) in
+    Alcotest.(check int) (ext ^ ": openfile") 0 (Image.compare_image img dec);
+    (match ImageLib.openfile_streaming ~extension:ext (ImageUtil.chunk_reader_of_string png) None with
+     | Some dec, _, _ ->
+         Alcotest.(check int) (ext ^ ": streaming") 0 (Image.compare_image img dec)
+     | None, _, _ -> Alcotest.fail (ext ^ ": streaming returned no image"));
+    let buf = Buffer.create 0 in
+    let och = ImageUtil.chunk_writer_of_buffer buf in
+    ImageLib.writefile ~extension:ext och img;
+    ImageUtil.close_chunk_writer och;
+    let data = Buffer.contents buf in
+    Alcotest.(check bool) (ext ^ ": writefile PNG magic") true
+      (String.length data >= 4 && String.sub data 0 4 = "\137PNG")
+
+  let check_jpg (img : Image.image) (ext : string) =
+    let enc = Bytes.to_string (ImageLib.JPG.bytes_of_jpg img) in
+    let w, h = ImageLib.size ~extension:ext (ImageUtil.chunk_reader_of_string enc) in
+    Alcotest.(check int) (ext ^ ": width") img.width w;
+    Alcotest.(check int) (ext ^ ": height") img.height h;
+    (* JPEG is lossy, so only the dimensions must survive the round trip. *)
+    let dec = ImageLib.openfile ~extension:ext (ImageUtil.chunk_reader_of_string enc) in
+    Alcotest.(check int) (ext ^ ": openfile dimensions") 0
+      (max (abs (dec.width - img.width)) (abs (dec.height - img.height)));
+    let buf = Buffer.create 0 in
+    let och = ImageUtil.chunk_writer_of_buffer buf in
+    ImageLib.writefile ~extension:ext och img;
+    ImageUtil.close_chunk_writer och;
+    let data = Buffer.contents buf in
+    Alcotest.(check bool) (ext ^ ": writefile JPEG SOI") true
+      (String.length data >= 2 && String.sub data 0 2 = "\255\216")
+
+  let png_and_jpg_dispatch () =
+    let img = Image.create_rgb 3 3 in
+    Image.fill_rgb img 10 20 30;
+    let png = Bytes.to_string (ImageLib.PNG.bytes_of_png img) in
+    for_each_spelling "png" [ ".png"; "png"; ".PNG"; "PnG" ] (check_png img png);
+    for_each_spelling "jpg" [ ".jpg"; "jpg"; ".JPG" ] (check_jpg img)
+
+  let unit_tests : unit Alcotest.test_case list = [
+    "extensions dispatch with or without a leading dot", `Quick, png_and_jpg_dispatch
+  ]
+
+  let regressions : unit Alcotest.test_case list = []
+end
+
 let tests : unit Alcotest.test list =
   [
     "PNG unit tests", ImageLib_PNG_tests.unit_tests;
@@ -585,6 +658,8 @@ let tests : unit Alcotest.test list =
     ("GIF regressions", ImageLib_GIF_tests.regressions);
     "JPG encoder unit tests", ImageLib_JPG_encoder_tests.unit_tests;
     ("JPG encoder regressions", ImageLib_JPG_encoder_tests.regressions);
+    "extension dispatch", ImageLib_dispatch_tests.unit_tests;
+    ("extension dispatch regressions", ImageLib_dispatch_tests.regressions);
   ]
 
 let () =

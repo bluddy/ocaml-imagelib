@@ -19,8 +19,18 @@
 
 open Image
 
+(* The format dispatchers match on the exact strings in their
+   [extensions] lists, which all carry a leading dot (e.g. [".png"]).
+   [Filename.extension] produces that dotted form, but the public
+   [~extension:] parameters of this module do not require it, so callers may
+   equally pass the bare name (["png"]).  Normalise case and the leading dot
+   so that both spellings -- and either case -- select the same format. *)
+let normalize_extension (extension : string) : string =
+  let e = String.lowercase_ascii extension in
+  if String.length e > 0 && e.[0] = '.' then e else "." ^ e
+
 let size ~extension ich =
-  let ext = String.lowercase_ascii extension in
+  let ext = normalize_extension extension in
   if List.mem ext ImagePNG.extensions
   then ImagePNG.size ich else
   if List.mem ext ImagePPM.extensions
@@ -36,7 +46,7 @@ let size ~extension ich =
     raise (Not_yet_implemented ext)
 
 let openfile ~extension ich : image =
-  let ext = String.lowercase_ascii extension in
+  let ext = normalize_extension extension in
   if List.mem ext ImagePNG.extensions
   then ImagePNG.parsefile ich else
   if List.mem ext ImageGIF.extensions
@@ -57,7 +67,7 @@ let openfile_streaming ~extension ich state =
   | Some (`GIF t) ->
     if_some (fun v -> `GIF v) (ImageGIF.read_streaming ich (Some t))
   | None ->
-    let ext = String.lowercase_ascii extension in
+    let ext = normalize_extension extension in
     if List.mem ext ImagePNG.extensions
     then Some (ImagePNG.parsefile ich), 0, None else
     if List.mem ext ImageGIF.extensions
@@ -71,7 +81,7 @@ let openfile_streaming ~extension ich state =
       raise (Not_yet_implemented ext)
 
 let writefile ~extension (och:ImageUtil.chunk_writer) i =
-  let extension = String.lowercase_ascii extension in
+  let extension = normalize_extension extension in
   if List.mem extension ImagePNG.extensions
   then ImagePNG.write och i else
   if List.mem extension ImageGIF.extensions

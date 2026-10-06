@@ -16,6 +16,10 @@
   decoding (8-bit samples, arbitrary chroma subsampling, restart intervals)
   and baseline sequential encoding.  JPEG is now handled natively by
   `ImageLib`, so the `imagemagick` fallback is no longer used for it.
+- `ImageLib` now accepts the format extension with or without a leading dot
+  (and in any case). Previously a bare extension such as `"png"` raised
+  `Not_yet_implemented` because dispatch matched the dotted forms only; this
+  is what made the newly-added JPEG path look as if it broke PNG.
 
 ## ocaml-imagelib_20210511
 

@@ -3,6 +3,4 @@
   (public_name image-codec)
   (synopsis "Pure OCaml image codec library")
   (wrapped false)
-  (libraries
-    (select unix from (stdlib-shims) ())
-    bigarray checkseum.ocaml decompress.zl))
+  (libraries bigarray checkseum.ocaml decompress.zl))

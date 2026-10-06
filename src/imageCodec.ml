@@ -35,8 +35,6 @@ let size ~extension ich =
   then ImagePNG.size ich else
   if List.mem ext ImagePPM.extensions
   then ImagePPM.size ich else
-  if List.mem ext ImageXCF.extensions
-  then ImageXCF.size ich else
   if List.mem ext ImageJPG.extensions
   then ImageJPG.size ich else
   if List.mem ext ImageGIF.extensions
@@ -94,7 +92,6 @@ let writefile ~extension (och:ImageUtil.chunk_writer) i =
 
 module PNG = ImagePNG
 module PPM = ImagePPM
-module XCF = ImageXCF
 module JPG = ImageJPG
 module BMP = ImageBMP
 module GIF = ImageGIF

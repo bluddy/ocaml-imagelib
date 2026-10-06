@@ -19,20 +19,13 @@ Supported image formats:
       arbitrary chroma subsampling and restart intervals.  Writing produces
       baseline sequential images.  Arithmetic coding, lossless modes, 12-bit
       samples and CMYK are not supported.
- - GIF (read-only, animated),
-    - There is an experimental native implementation available in the pure `ImageCodec` module, which now
-      handles interlaced images, local colour tables, the disposal methods 0 to 3 and comment extensions.
-      `image_codec.unix` still prefers `imagemagick` for GIF, to avoid changing the behaviour
-      existing applications depend on.
- - XCF (only image size natively),
- - Utility functions for handling unimplemented formats are available in
-   the 'image_codec.unix' findlib package and handle conversion from unsupported
-   image formats like GIF, XCF by converting them to PNG using the
-   `convert` commandline utility from `imagemagick`.
+ - GIF (read/write, animated),
+    - Native implementation in the pure `ImageCodec` module handles
+      interlaced images, local colour tables, disposal methods 0-3, and
+      comment extensions.
 
-As image-codec only requires `decompress`, it is suitable (excluding operations
-requiring the `imagemagick` `convert` binary) for compilation to javascript
-using `js_of_ocaml`, or inclusion in MirageOS unikernels.
+As image-codec only requires `decompress`, it is suitable for compilation to
+javascript using `js_of_ocaml`, or inclusion in MirageOS unikernels.
 
 The JPEG codec is pure OCaml and currently slower than `imagemagick` and
 libjpeg; see [JPEG-PERFORMANCE.md](JPEG-PERFORMANCE.md) for measurements, a
@@ -45,9 +38,8 @@ List of dependencies:
  - dune (at least 3.14)
  - decompress (version >= 1.5.3)
 
-Additional packages:
- - ImageMagick (`convert`) for handling some formats.
- - Crowbar, Alcotest, afl-persistent (for the test suite)
+Additional packages (for test suite only):
+ - Crowbar, Alcotest, afl-persistent
 
 Installation
 ------------
@@ -136,7 +128,6 @@ Re-raised at file "unix/imageUtil_unix.ml", line 68, characters 8-15
 Called from file "src/imageBMP.ml", line 37, characters 10-34
 Called from file "src/imageBMP.ml", line 369, characters 6-40
 Called from file "src/imageBMP.ml", line 376, characters 4-53
-Called from file "src/imageBMP.ml", line 556, characters 20-43
 Called from file "tests/aflrunner.ml", line 13, characters 21-62
 Called from file "tests/aflrunner.ml", line 21, characters 9-34
 // id:000015,sig:06,src:000110,op:havoc,rep:8

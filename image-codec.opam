@@ -20,20 +20,13 @@ Supported image formats:
       arbitrary chroma subsampling and restart intervals.  Writing produces
       baseline sequential images.  Arithmetic coding, lossless modes, 12-bit
       samples and CMYK are not supported.
- - GIF (read-only, animated),
-    - There is an experimental native implementation available in the pure `ImageCodec` module, which now
-      handles interlaced images, local colour tables, the disposal methods 0 to 3 and comment extensions.
-      `image_codec.unix` still prefers `imagemagick` for GIF, to avoid changing the behaviour
-      existing applications depend on.
- - XCF (only image size natively),
- - Utility functions for handling unimplemented formats are available in
-   the 'image_codec.unix' findlib package and handle conversion from unsupported
-   image formats like GIF, XCF by converting them to PNG using the
-   `convert` commandline utility from `imagemagick`.
+ - GIF (read/write, animated),
+    - Native implementation in the pure `ImageCodec` module handles
+      interlaced images, local colour tables, disposal methods 0-3, and
+      comment extensions.
 
-As image-codec only requires `decompress`, it is suitable (excluding operations
-requiring the `imagemagick` `convert` binary) for compilation to javascript
-using `js_of_ocaml`, or inclusion in MirageOS unikernels.
+As image-codec only requires `decompress`, it is suitable for compilation to
+javascript using `js_of_ocaml`, or inclusion in MirageOS unikernels.
 
 `app/imagetool.ml` contains an example binary that acts as a command-line
 interface to many of the functions in the library. It will be installed as

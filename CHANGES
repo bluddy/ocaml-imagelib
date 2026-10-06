@@ -2,6 +2,9 @@
 
 - Rename library from `imagelib` to `image-codec` (package name); the OCaml module is now `ImageCodec` (was `ImageLib`).
 - Require OCaml >= 5.0.0.
+- Remove XCF (GIMP) support — was size-only, no actual image decoding.
+- Make GIF fully native: remove ImageMagick fallback in `image_codec.unix`; GIF read/write/streaming now fully supported in core.
+- Drop ImageMagick (`convert`) dependency entirely — no external tools required.
 - Skip the two full-size copies chroma upsampling used to make when nothing
   needs upsampling, which is every component of a 4:4:4 image. This was 38% of
   decode time; see JPEG-PERFORMANCE.md for measurements and for what

@@ -1,7 +1,0 @@
-(cram
- (applies_to :whole_subtree)
- (alias png-suite)
- (deps
-  (package image-codec)
-  tests/test.sh
-  tests/test-error.sh))

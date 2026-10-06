@@ -7,7 +7,7 @@
   "Rodolphe Lepigre <lepigre@mpi-sws.org>")
 (maintainers
   "Yotam Barnoy <yotambarnoy@gmail.com>")
-(source (github bluddy/ocaml-image))
+(source (github bluddy/ocaml-image-codec))
 (license "LGPL-3.0-or-later")
 
 (package
@@ -25,7 +25,7 @@ in your Dune file.
 Supported image formats:
  - PNG (full implementation of RFC 2083),
  - PPM, PGM, PBM, ... (fully supported),
- - BMP (read-only)
+ - BMP (read and write, 24-bit RGB),
  - JPEG (read and write),
     - Baseline sequential and progressive DCT decoding, 8-bit samples,
       arbitrary chroma subsampling and restart intervals.  Writing produces

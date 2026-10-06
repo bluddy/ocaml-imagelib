@@ -14,7 +14,7 @@ in your Dune file.
 Supported image formats:
  - PNG (full implementation of RFC 2083),
  - PPM, PGM, PBM, ... (fully supported),
- - BMP (read-only)
+ - BMP (read and write, 24-bit RGB),
  - JPEG (read and write),
     - Baseline sequential and progressive DCT decoding, 8-bit samples,
       arbitrary chroma subsampling and restart intervals.  Writing produces
@@ -38,8 +38,8 @@ authors: [
   "Rodolphe Lepigre <lepigre@mpi-sws.org>"
 ]
 license: "LGPL-3.0-or-later"
-homepage: "https://github.com/bluddy/ocaml-image"
-bug-reports: "https://github.com/bluddy/ocaml-image/issues"
+homepage: "https://github.com/bluddy/ocaml-image-codec"
+bug-reports: "https://github.com/bluddy/ocaml-image-codec/issues"
 depends: [
   "dune" {>= "3.14"}
   "ocaml" {>= "5.0.0"}
@@ -63,4 +63,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/bluddy/ocaml-image.git"
+dev-repo: "git+https://github.com/bluddy/ocaml-image-codec.git"

@@ -18,7 +18,7 @@
 
 (executable
  (name tests)
- (modules tests)
+ (modules tests ImageCodec_PNG_roundtrip_tests)
  (libraries image-codec image-codec.unix alcotest))
 
 ; The JPEG and GIF tests read fixtures encoded by libjpeg and libgif, together

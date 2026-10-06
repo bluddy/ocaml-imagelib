@@ -652,6 +652,8 @@ let tests : unit Alcotest.test list =
   [
     "PNG unit tests", ImageCodec_PNG_tests.unit_tests;
     ("PNG regressions", ImageCodec_PNG_tests.regressions);
+    "PNG roundtrip tests", ImageCodec_PNG_roundtrip_tests.unit_tests;
+    ("PNG roundtrip regressions", ImageCodec_PNG_roundtrip_tests.regressions);
     "JPG unit tests", ImageCodec_JPG_tests.unit_tests;
     ("JPG regressions", ImageCodec_JPG_tests.regressions);
     "GIF unit tests", ImageCodec_GIF_tests.unit_tests;

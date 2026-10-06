@@ -917,9 +917,91 @@ let write (cw:chunk_writer) (original_image:image) =
     | RGB _ ->
       raise (Corrupted_image
                "Something is wrong, color planes of different resolution")
+    | GreyA (Pix8 grey_plane, Pix8 alpha_plane) ->
+      (* Handle greyscale with 8-bit alpha - reserve index 0 for transparent *)
+      let open Bigarray in
+      let width = Array2.dim1 grey_plane in
+      let height = Array2.dim2 grey_plane in
+      let target_plane = Array2.create Int C_layout width height in
+      for x = 0 to width - 1 do
+        for y = 0 to height - 1 do
+          let a = Array2.get alpha_plane x y in
+          if a < 128 then
+            Array2.set target_plane x y 0
+          else begin
+            let v = Array2.get grey_plane x y in
+            let packed = pack_int v v v in
+            register_count packed ;
+            Array2.set target_plane x y packed
+          end
+        done
+      done ;
+      target_plane
+    | GreyA (Pix16 grey_plane, Pix16 alpha_plane) ->
+      let open Bigarray in
+      let width = Array2.dim1 grey_plane in
+      let height = Array2.dim2 grey_plane in
+      let target_plane = Array2.create Int C_layout width height in
+      for x = 0 to width - 1 do
+        for y = 0 to height - 1 do
+          let a = Array2.get alpha_plane x y in
+          if a < 32768 then
+            Array2.set target_plane x y 0
+          else begin
+            let v = Array2.get grey_plane x y in
+            let packed = pack_int v v v in
+            register_count packed ;
+            Array2.set target_plane x y packed
+          end
+        done
+      done ;
+      target_plane
+    | RGBA (Pix8 r, Pix8 g, Pix8 b, Pix8 a) ->
+      (* Handle RGBA with 8-bit alpha - reserve index 0 for transparent *)
+      let open Bigarray in
+      let width = Array2.dim1 r in
+      let height = Array2.dim2 r in
+      let target_plane = Array2.create Int C_layout width height in
+      for x = 0 to width - 1 do
+        for y = 0 to height - 1 do
+          let a_val = Array2.get a x y in
+          if a_val < 128 then
+            Array2.set target_plane x y 0
+          else begin
+            let v_r = Array2.get r x y in
+            let v_g = Array2.get g x y in
+            let v_b = Array2.get b x y in
+            let packed = pack_int v_r v_g v_b in
+            register_count packed ;
+            Array2.set target_plane x y packed
+          end
+        done
+      done ;
+      target_plane
+    | RGBA (Pix16 r, Pix16 g, Pix16 b, Pix16 a) ->
+      let open Bigarray in
+      let width = Array2.dim1 r in
+      let height = Array2.dim2 r in
+      let target_plane = Array2.create Int C_layout width height in
+      for x = 0 to width - 1 do
+        for y = 0 to height - 1 do
+          let a_val = Array2.get a x y in
+          if a_val < 32768 then
+            Array2.set target_plane x y 0
+          else begin
+            let v_r = Array2.get r x y in
+            let v_g = Array2.get g x y in
+            let v_b = Array2.get b x y in
+            let packed = pack_int v_r v_g v_b in
+            register_count packed ;
+            Array2.set target_plane x y packed
+          end
+        done
+      done ;
+      target_plane
     | GreyA _
     | RGBA _ ->
-      raise (Not_yet_implemented "GIF does not yet support transparency")
+      raise (Not_yet_implemented "GIF does not yet support transparency (unsupported bit depth combination)")
   in
 
   let color_table_shift =
@@ -930,6 +1012,25 @@ let write (cw:chunk_writer) (original_image:image) =
       | v -> loop (succ bits) (v lsr 1)
     in
     let bits = loop 0 (ColorTable.length color_count-1) in
+    bits
+  in let color_table_size = 1 lsl color_table_shift in
+
+  assert (color_table_size >= ColorTable.length color_count);(*TODO*)
+
+  let has_alpha = match original_image.pixels with
+    | GreyA _ | RGBA _ -> true
+    | _ -> false
+  in
+
+  (* Calculate color table size *)
+  let color_table_shift =
+    (* here we try to round the cardinal of color_count *UP* to
+       the nearest power of two *)
+    let rec loop bits = function
+      | 0 -> max 1 bits
+      | v -> loop (succ bits) (v lsr 1)
+    in
+    let bits = loop 0 (ColorTable.length color_count - 1) in
     bits
   in let color_table_size = 1 lsl color_table_shift in
 
@@ -969,7 +1070,12 @@ let write (cw:chunk_writer) (original_image:image) =
     for i = 0 to color_table_size do
       ColorTable.replace color_table i "\x34\x33\000" (* just fill *)
     done ;
-    let place = ref 0 in
+    let place = ref (if has_alpha then 1 else 0) in
+    if has_alpha then begin
+      (* Reserve index 0 for transparent *)
+      ColorTable.replace color_table 0 "\x00\x00\x00";
+      ColorTable.replace color_table_inv 0 0;
+    end;
     (* TODO ideally sort this first so the most used will have the
        lowest number? *)
     ColorTable.to_seq_keys color_count
@@ -993,6 +1099,21 @@ let write (cw:chunk_writer) (original_image:image) =
   in
 
   (* TODO if we support transparency, emit a Graphic Control Extension block *)
+  (* Emit Graphic Control Extension for transparency if the image has alpha *)
+  let has_alpha = match original_image.pixels with
+    | GreyA _ | RGBA _ -> true
+    | _ -> false
+  in
+  if has_alpha then begin
+    chunk_write_char cw '\x21';        (* Extension Introducer *)
+    chunk_write_char cw '\xF9';        (* Graphic Control Label *)
+    chunk_write_char cw '\x04';        (* Block Size *)
+    chunk_write_char cw '\x01';        (* Packed field: transparent color flag = 1 *)
+    chunk_write_char cw '\x00';        (* Delay Time (low byte) *)
+    chunk_write_char cw '\x00';        (* Delay Time (high byte) *)
+    chunk_write_char cw '\x00';        (* Transparent Color Index = 0 *)
+    chunk_write_char cw '\x00';        (* Block Terminator *)
+  end;
 
   (* Emit an Image Descriptor block: *)
   chunk_write_char cw '\x2c';

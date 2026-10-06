@@ -561,3 +561,70 @@ module ReadBMP : ReadImage = struct
     | Ok img -> img
 end
 include ReadBMP
+
+(* ------------------------------------------------------------------ *)
+(* BMP Writer - 24-bit RGB *)
+(* ------------------------------------------------------------------ *)
+
+(* Pack 16-bit little-endian *)
+let pack_uint16le v =
+  let b = Bytes.create 2 in
+  Bytes.set b 0 (Char.chr (v land 0xff));
+  Bytes.set b 1 (Char.chr ((v lsr 8) land 0xff));
+  Bytes.to_string b
+
+(* Pack 32-bit little-endian *)
+let pack_uint32le v =
+  let b = Bytes.create 4 in
+  Bytes.set b 0 (Char.chr (v land 0xff));
+  Bytes.set b 1 (Char.chr ((v lsr 8) land 0xff));
+  Bytes.set b 2 (Char.chr ((v lsr 16) land 0xff));
+  Bytes.set b 3 (Char.chr ((v lsr 24) land 0xff));
+  Bytes.to_string b
+
+(* Write a BMP file in 24-bit RGB format *)
+let write (cw:chunk_writer) (original_image:image) =
+  (* Validate dimensions *)
+  if original_image.width > max_dimension || original_image.height > max_dimension then
+    raise (Invalid_argument "Image dimensions too large for BMP");
+
+  (* Calculate row size (padded to 4-byte boundary) *)
+  let row_size = ((original_image.width * 3 + 3) / 4) * 4 in
+  let image_size = row_size * original_image.height in
+  let file_size = 14 + 40 + image_size in
+
+  (* Write file header (14 bytes) *)
+  chunk_write cw "BM";                    (* Signature *)
+  chunk_write cw (pack_uint32le file_size);
+  chunk_write cw "\x00\x00\x00\x00";      (* Reserved *)
+  chunk_write cw (pack_uint32le (14 + 40)); (* Pixel data offset *)
+
+  (* Write DIB header (40 bytes - BITMAPINFOHEADER) *)
+  chunk_write cw (pack_uint32le 40);       (* Header size *)
+  chunk_write cw (pack_uint32le original_image.width);
+  chunk_write cw (pack_uint32le original_image.height);
+  chunk_write cw (pack_uint16le 1);        (* Planes *)
+  chunk_write cw (pack_uint16le 24);       (* Bits per pixel *)
+  chunk_write cw (pack_uint32le 0);        (* Compression: none *)
+  chunk_write cw (pack_uint32le image_size); (* Image size *)
+  chunk_write cw (pack_uint32le 2835);     (* X pixels per meter (72 DPI) *)
+  chunk_write cw (pack_uint32le 2835);     (* Y pixels per meter (72 DPI) *)
+  chunk_write cw (pack_uint32le 0);        (* Colors in palette *)
+  chunk_write cw (pack_uint32le 0);        (* Important colors *)
+
+  (* Write pixel data - bottom-up, BGR order, padded rows *)
+  let padding = row_size - original_image.width * 3 in
+  let pad_bytes = String.make padding '\x00' in
+  for y = original_image.height - 1 downto 0 do
+    let row = Bytes.create (original_image.width * 3) in
+    for x = 0 to original_image.width - 1 do
+      Image.read_rgb original_image x y (fun r g b ->
+        let idx = x * 3 in
+        Bytes.set row idx (Char.chr b);       (* Blue *)
+        Bytes.set row (idx + 1) (Char.chr g); (* Green *)
+        Bytes.set row (idx + 2) (Char.chr r)  (* Red *)
+      )
+    done;
+    chunk_write cw (Bytes.to_string row);
+    if padding > 0 then chunk_write cw pad_bytes
+  done

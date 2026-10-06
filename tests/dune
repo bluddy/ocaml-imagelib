@@ -37,3 +37,7 @@
 ; (targets testwithcrowbar)
 ; (action
 ;   (run %{exe:testwithcrowbar.exe})))
+(executable
+ (name gif_transparency_test)
+ (modules gif_transparency_test)
+ (libraries image-codec image-codec.unix alcotest))

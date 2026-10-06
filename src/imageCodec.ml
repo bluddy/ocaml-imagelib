@@ -88,6 +88,8 @@ let writefile ~extension (och:ImageUtil.chunk_writer) i =
   then ImageJPG.write och i else
   if List.mem extension ImagePPM.extensions
   then ImagePPM.write och i else
+  if List.mem extension ImageBMP.extensions
+  then ImageBMP.write och i else
     raise (Not_yet_implemented extension)
 
 module PNG = ImagePNG

@@ -122,5 +122,8 @@ module GIF :
 
 module BMP :
   sig
+    include ReadImage
+    include WriteImage
+
     module ReadBMP : ReadImage
   end

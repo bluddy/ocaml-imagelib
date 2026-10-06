@@ -662,6 +662,8 @@ let tests : unit Alcotest.test list =
     ("JPG encoder regressions", ImageCodec_JPG_encoder_tests.regressions);
     "extension dispatch", ImageCodec_dispatch_tests.unit_tests;
     ("extension dispatch regressions", ImageCodec_dispatch_tests.regressions);
+    "BMP roundtrip tests", ImageCodec_BMP_roundtrip_tests.unit_tests;
+    ("BMP roundtrip regressions", ImageCodec_BMP_roundtrip_tests.regressions);
   ]
 
 let () =
